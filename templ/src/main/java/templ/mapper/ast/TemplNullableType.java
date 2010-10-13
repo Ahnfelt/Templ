@@ -11,7 +11,7 @@ public class TemplNullableType {
 
     @Override
     public String toString() {
-        return type.toString() + (nullable?"?":"");
+        return type.toString();
     }
 
     public TemplType getType() {

@@ -27,9 +27,11 @@ public class TemplTypeRecord extends TemplType {
         Iterator<Map.Entry<String, TemplNullableType>> iterator = this.fields.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, TemplNullableType> entry = iterator.next();
+            TemplNullableType value = entry.getValue();
             builder.append(entry.getKey());
+            builder.append(value.isNullable() ? "?" : "");
             builder.append(":");
-            builder.append(entry.getValue().toString());
+            builder.append(value.toString());
             if (iterator.hasNext()) {
                 builder.append(",");
             }
