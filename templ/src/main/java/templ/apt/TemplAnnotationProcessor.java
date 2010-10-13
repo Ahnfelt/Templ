@@ -50,6 +50,10 @@ public class TemplAnnotationProcessor implements AnnotationProcessor {
 
             try {
                 String type = typeMapper.convert(inputType).toString();
+                System.out.println("inputType: " + inputType);
+                System.out.println("Type: " + type);
+                if (true) continue;
+
                 String templateFile = ResourceLocator.locate(templateFileName);
                 String executableFile = ResourceLocator.locate("Templ");
                 Process process = Runtime.getRuntime().exec(
