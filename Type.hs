@@ -22,11 +22,9 @@ data Type
 instance Show Type where
     show t = prettyType (Map.empty, Set.empty, t)
 
-type FieldConstraint = (Type, Label, Type)
+type FieldConstraint = (Type, Label, Bool, Type)
 
-type RequiredConstraint = (Type, Label)
-
-type TypeScheme = (Map TypeVariable (Map Label Type), Set (TypeVariable, Label), Type)
+type TypeScheme = (Map TypeVariable (Map Label (Type, Bool)), Type)
 
 count :: Type -> Map TypeVariable Int
 count (TVariable a) = Map.singleton a 1
@@ -47,15 +45,15 @@ substitute s (TRecord fields) = TRecord (Map.map (\(t, required) -> (substitute 
 
 -- TODO: This won't display right if the same field constrained variable occurs twice (perhaps use count?)
 prettyType :: TypeScheme -> String
-prettyType (records, required, t) = pretty t
+prettyType (records, t) = pretty t
     where 
         pretty t = case t of
             TVariable a -> case Map.lookup a records of
                 Just fields | not (Map.null fields) -> "(" ++ intercalate ", " fields' ++ ")"
                     where 
                         fields' = map field (Map.toList fields)
-                        field (l, t) = l ++ optional a l ++ ": " ++ pretty t
-                        optional a l = if Set.member (a, l) required then "" else "?"
+                        field (l, (t, required)) = l ++ optional required ++ ": " ++ pretty t
+                        optional required = if required then "" else "?"
                 _ -> a
             TFunction t1 t2 -> pretty t1 ++ " -> " ++ pretty t2
             TText -> "String"
