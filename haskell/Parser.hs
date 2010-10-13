@@ -1,4 +1,4 @@
-module Parser (parseTextExpression, parseExpression) where
+module Parser (parseTextExpression, parseExpression, parseTypeScheme) where
 
 import Expression
 import Type
@@ -288,4 +288,7 @@ parseTextExpression name input = parse (do e <- textExpression; eof; return e) n
 
 parseExpression :: String -> String -> Either ParseError Expression
 parseExpression name input = parse (do e <- expression; eof; return e) name input
+
+parseTypeScheme :: String -> String -> Either ParseError TypeScheme
+parseTypeScheme name input = parse (do scheme <- typeScheme; eof; return scheme) name input
 
