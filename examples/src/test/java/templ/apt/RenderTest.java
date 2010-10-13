@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 
 public class RenderTest {
 
-    @Ignore
     @Test
     public void renderAdamTest() {
         String renderedAdam = RendererProxy.mock(TestRenderer.class).renderAdam(new Adam());

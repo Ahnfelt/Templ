@@ -10,6 +10,7 @@ import templ.mapper.TypeMapper;
 import templ.utility.Files;
 import templ.utility.ResourceLocator;
 import templ.exception.TemplateException;
+import templ.utility.Strings;
 
 import java.util.*;
 import java.io.InputStream;
@@ -50,14 +51,12 @@ public class TemplAnnotationProcessor implements AnnotationProcessor {
 
             try {
                 String type = typeMapper.convert(inputType).toString();
-                System.out.println("inputType: " + inputType);
-                System.out.println("Type: " + type);
-                if (true) continue;
-
                 String templateFile = ResourceLocator.locate(templateFileName);
                 String executableFile = ResourceLocator.locate("Templ");
-                Process process = Runtime.getRuntime().exec(
-                        new String[] {executableFile, "check", templateFile, type}, null, null);
+                String[] command = {executableFile, "check", templateFile, type};
+                System.out.println("inputType: " + inputType);
+                System.out.println("EXEC: "+ Strings.separateBy(command, " "));
+                Process process = Runtime.getRuntime().exec(command, null, null);
                 String error = Files.read(process.getErrorStream());
                 int result = process.waitFor();
                 if(result != 0) {

@@ -36,7 +36,7 @@ public class ValueMapper extends Mapper {
             builder.append(convert(element));
             if(iterator.hasNext()) builder.append(",");
         }
-        builder.append(":()]"); // Hack, but we don't need the type at runtime
+        builder.append("]");
         return builder.toString();
     }
 
@@ -60,7 +60,7 @@ public class ValueMapper extends Mapper {
             }
             if(fieldValue != null) {
                 builder.append(fieldName);
-                builder.append("=");
+                builder.append(":");
                 builder.append(convert(fieldValue));
                 builder.append(",");
             }

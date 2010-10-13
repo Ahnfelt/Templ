@@ -5,6 +5,7 @@ import templ.exception.TemplateException;
 import templ.mapper.ValueMapper;
 import templ.utility.Files;
 import templ.utility.ResourceLocator;
+import templ.utility.Strings;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -46,8 +47,9 @@ public class RendererProxy<T> implements InvocationHandler {
             try {
                 String templateFile = ResourceLocator.locate(template.value());
                 String executableFile = ResourceLocator.locate("Templ");
-                Process process = Runtime.getRuntime().exec(
-                        new String[] {executableFile, "run", templateFile, value}, null, null);
+                String[] command = {executableFile, "run", templateFile, value};
+                System.out.println("EXEC: "+Strings.separateBy(command, " "));
+                Process process = Runtime.getRuntime().exec(command, null, null);
                 String document = Files.read(process.getInputStream());
                 String error = Files.read(process.getErrorStream());
                 int result = process.waitFor();
