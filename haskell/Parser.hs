@@ -144,6 +144,14 @@ typeScheme = try (do t <- atomicTypeTerm; return (Map.empty, t)) <|> do
 
 builtin after =
     [ do
+        keyword "import"
+        whitespace
+        moduleName <- upperName `sepBy1` char '.'
+        whitespace
+        alias <- upperName
+        e <- after
+        return (EImport moduleName alias e)
+    , do
         keyword "function"
         whitespace
         name <- upperName

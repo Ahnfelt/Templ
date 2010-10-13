@@ -101,8 +101,5 @@ useVariable x = do
 report :: String -> Interpret a
 report message = do
     position' <- liftM position ask
-    error (message ++ case position' of 
-        Just (name, line, column) -> " at line " ++ show line ++ ", column " ++ show column ++
-            (if name /= "" then " in " ++ show name else "")
-        Nothing -> "")
+    error (errorWithPosition message position')
 

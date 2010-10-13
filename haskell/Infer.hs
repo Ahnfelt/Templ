@@ -166,10 +166,7 @@ newInferState = InferState {
 report :: String -> Infer a
 report message = do
     position' <- liftM position get
-    error (message ++ case position' of 
-        Just (name, line, column) -> " at line " ++ show line ++ ", column " ++ show column ++
-            (if name /= "" then " in " ++ show name else "")
-        Nothing -> "")
+    error (errorWithPosition message position')
 
 withVariable :: Variable -> TypeScheme -> Infer a -> Infer a
 withVariable x scheme monad = do

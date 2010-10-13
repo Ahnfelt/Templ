@@ -15,6 +15,10 @@ type Variable = String
 
 type Text = String
 
+type ModuleName = [String]
+
+type Module = Either Expression (Map Variable Expression)
+
 data Expression
     = EAt Position Expression
     | EVariable Variable
@@ -29,6 +33,7 @@ data Expression
     | ERecord (Map Label (Expression, Bool))
     | EConcat Expression Expression
     | EChoice Expression Expression
+    | EImport ModuleName String Expression
     deriving Show
 
 data Value
@@ -37,4 +42,10 @@ data Value
     | VList [Value]
     | VRecord (Map Label Value)
     deriving Show
+
+errorWithPosition :: String -> Maybe Position -> Sting
+errorWithPosition message position = message ++ case position of 
+    Just (name, line, column) -> " at line " ++ show line ++ ", column " ++ show column ++
+        (if name /= "" then " in " ++ show name else "")
+    Nothing -> "")
 
