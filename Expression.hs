@@ -29,7 +29,6 @@ data Expression
     | ERecord (Map Label (Expression, Bool))
     | EConcat Expression Expression
     | EChoice Expression Expression
-    | EType Expression TypeScheme Expression
     deriving Show
 
 data Value

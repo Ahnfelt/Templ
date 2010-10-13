@@ -55,7 +55,6 @@ interpret (EFor x e1 e2) = do
             case v' of
                 VText text -> return text
                 _ -> report (show v' ++ " is not a string but is the result of an iteration")
-interpret (EType _ _ e) = interpret e
 interpret (EAccess e l) = do
     v <- interpret e
     case v of

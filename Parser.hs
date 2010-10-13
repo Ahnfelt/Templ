@@ -187,14 +187,6 @@ builtin after =
         whitespace
         e2 <- expression
         return (EFor x e1 e2)
-    , do
-        keyword "type"
-        whitespace
-        e1 <- expression
-        whitespace
-        scheme <- typeScheme
-        e2 <- after
-        return (EType e1 scheme e2)
     , keyword2 "apply" EApply
     , keyword2 "concat" EConcat
     , keyword2 "choice" EChoice
