@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>$meta.title</title>
+    <meta name="keywords" content="$kw:$meta.keywords{$kw }" />
+  </head>
+  <body>    
+    <h1>$meta.heading</h1>
+
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Address</th>
+      </tr>
+      $p:$persons{
+      <tr>
+        <td>$p.name</td>
+        <td>$p.address<td>
+      </tr>
+      }
+    </table>
+
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+      </tr>
+      $p:$persons{
+      <tr>
+        <td>$p.name</td>
+        <td>$p.email<td>
+      </tr>
+      }
+    </table>
+
+  </body>
+</html>

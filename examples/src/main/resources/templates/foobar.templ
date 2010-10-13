@@ -1,0 +1,7 @@
+ShowFooBar ($foobar: (foo: *, bar: *)): * {
+    ShowFooBar {$foobar.bar | $foobar.foo}
+}
+
+ShowFoo ($foobar: (foo: *)): * {
+    ShowFoo {@ShowFooBar $foobar}
+}
