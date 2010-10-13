@@ -13,7 +13,6 @@ import Control.Monad.State
 
 data InferState = InferState {
     fields :: [(FieldConstraint, Maybe Position)],
-    required :: [(RequiredConstraint, Maybe Position)],
     environment :: Map Variable TypeScheme,
     substitution :: Map TypeVariable Type,
     optional :: Bool,
@@ -34,7 +33,7 @@ infer (EApply e1 e2) = do
     return t3
 infer (ELambda x e) = do
     t1 <- newTypeVariable "lambda"
-    t2 <- withVariable x (Map.empty, Set.empty, t1) (infer e)
+    t2 <- withVariable x (Map.empty, t1) (infer e)
     return (TFunction t1 t2)
 infer (ELet x e1 e2) = do
     t1 <- infer e1
@@ -50,7 +49,7 @@ infer (EFor x e1 e2) = do
     t <- newTypeVariable "for"
     t1 <- infer e1
     unify t1 (TList t)
-    t2 <- withVariable x (Map.empty, Set.empty, t) (infer e2)
+    t2 <- withVariable x (Map.empty, t) (infer e2)
     unify t2 TText
 infer (EType e1 scheme e2) = do
     -- TODO: Check that that the scheme implies (modulo renaming) the inferred scheme (after inferring e2)
@@ -61,9 +60,8 @@ infer (EType e1 scheme e2) = do
 infer (EAccess e l) = do
     t1 <- infer e
     t2 <- newTypeVariable "access"
-    typeField t1 l t2
     optionalBranch <- liftM optional get
-    when (not optionalBranch) (requireField t1 l)
+    generateFieldConstraint t1 l t2 (not optionalBranch)
     return t2
 infer (ERecord fields) = do
     fieldTypes <- liftM Map.fromList (mapM inferField (Map.toList fields))
@@ -113,40 +111,34 @@ runInfer monad = evalState (monad >>= generalize) newInferState
 generalize :: Type -> Infer TypeScheme
 generalize t = do
     fields' <- liftM fields get
-    required' <- liftM required get
     fields'' <- substitutionFixPoint (foldM checkFieldConstraint Map.empty fields')
-    required'' <- liftM (Set.fromList . catMaybes) (mapM checkRequiredConstraint required')
     s <- liftM substitution get
     let t' = substitute s t
     environment' <- liftM environment get
-    let nonFree' = Set.unions (map (\(_, _, t) -> free t) (Map.elems environment'))
+    let nonFree' = Set.unions (map (free . snd) (Map.elems environment'))
     let free' = freeFixPoint fields'' (free t) `Set.difference` nonFree'
     let free'' = (Map.fromList (map (\k -> (k, Map.empty)) (Set.toList free')))
     let fields''' = Map.union (Map.intersection fields'' free'') free'' 
-    return (fields''', Set.filter (\(a, _) -> Set.member a free') required'', t')
+    return (fields''', t')
 
 
 instantiate :: TypeScheme -> Infer Type
-instantiate (records', required', t) | Map.null records' = return t
-instantiate (records', required', t) = do
+instantiate (records', t) | Map.null records' = return t
+instantiate (records', t) = do
     let free' = Set.toList (Map.keysSet records')
     ts <- mapM newTypeVariable free'
     let s = Map.fromList (zip free' ts)
     state <- get
     let records'' = concatMap (\(a, fields) -> [
-            ((substitute s (TVariable a), l, substitute s t), position state) | 
-            (l, t) <- Map.assocs fields]) (Map.assocs records')
-    let required'' = map (\(a, l) -> ((substitute s (TVariable a), l), position state)) (Set.toList required')
-    put (state {
-        fields = records'' ++ fields state,
-        required = required'' ++ required state
-        })
+            ((substitute s (TVariable a), l, substitute s t, required), position state) | 
+            (l, (t, required)) <- Map.assocs fields]) (Map.assocs records')
+    put (state { fields = records'' ++ fields state })
     return (substitute s t)
     
 
-freeFixPoint :: Map TypeVariable (Map Label Type) -> Set TypeVariable -> Set TypeVariable
+freeFixPoint :: Map TypeVariable (Map Label (Type, Bool)) -> Set TypeVariable -> Set TypeVariable
 freeFixPoint records as = 
-    let as' = Map.fold (\fields as -> Set.unions (as : map free (Map.elems fields))) as records in
+    let as' = Map.fold (\fields as -> Set.unions (as : map (free . fst) (Map.elems fields))) as records in
     if Set.size as' /= Set.size as then freeFixPoint records as' else as'
 
 substitutionFixPoint :: Infer a -> Infer a
@@ -156,42 +148,31 @@ substitutionFixPoint monad = do
     size' <- liftM (Map.size . substitution) get
     if size /= size' then substitutionFixPoint monad else return result
 
-checkFieldConstraint :: (Map TypeVariable (Map Label Type)) -> (FieldConstraint, Maybe Position) -> Infer (Map TypeVariable (Map Label Type))
-checkFieldConstraint records ((t1, l, t2), position) = withPosition position $ do
+checkFieldConstraint :: (Map TypeVariable (Map Label (Type, Bool))) -> (FieldConstraint, Maybe Position) -> Infer (Map TypeVariable (Map Label (Type, Bool)))
+checkFieldConstraint records ((t1, l, t2, required), position) = withPosition position $ do
     s <- liftM substitution get
     let t1' = substitute s t1
     let t2' = substitute s t2
-    case (t1', l, t2') of
-        (TVariable x, l, t2) -> case Map.lookup x records of
+    case (t1', t2') of
+        (TVariable x, t2) -> case Map.lookup x records of
             Just fields -> case Map.lookup l fields of
-                Just t2' -> do
+                Just (t2', required') -> do
                     t <- unify t2 t2'
-                    return (Map.insert x (Map.insert l t fields) records) 
-                Nothing -> return (Map.insert x (Map.insert l t2 fields) records)
-            Nothing -> return (Map.insert x (Map.singleton l t2) records)
-        (TRecord fields, l, t2) -> case Map.lookup l fields of
+                    return (Map.insert x (Map.insert l (t, required || required') fields) records) 
+                Nothing -> return (Map.insert x (Map.insert l (t2, required) fields) records)
+            Nothing -> return (Map.insert x (Map.singleton l (t2, required)) records)
+        (TRecord fields, t2) -> case Map.lookup l fields of
+            Just (_, False) | required -> report (show t1' ++ " may not have field " ++ show l)
             Just (t1, required') -> do
                 unify t1 t2
                 return records
+            Nothing | required -> report (show t1' ++ " does not have field " ++ show l)
             Nothing -> return records
-        (t, l, _) -> report (show t ++ " is not a record type and thus cannot have a field " ++ show l)
-
-checkRequiredConstraint :: (RequiredConstraint, Maybe Position) -> Infer (Maybe (TypeVariable, Label))
-checkRequiredConstraint ((t1, l), position) = withPosition position $ do
-    s <- liftM substitution get
-    let t1' = substitute s t1
-    case (t1', l) of
-        (TVariable x, l) -> return (Just (x, l))
-        (TRecord fields, l) -> case Map.lookup l fields of
-            Just (_, True) -> return Nothing 
-            Just (_, False) -> report (show t1' ++ " may not have field " ++ show l)
-            Nothing -> report (show t1' ++ " does not have field " ++ show l)
-        (t, l) -> report (show t ++ " is not a record type and thus cannot have a field " ++ show l)
+        (t, _) -> report (show t ++ " is not a record type and thus cannot have a field " ++ show l)
 
 newInferState :: InferState
 newInferState = InferState {
     fields = [],
-    required = [],
     environment = Map.empty,
     substitution = Map.empty,
     optional = False,
@@ -272,13 +253,8 @@ withOptional monad = do
     put (state' { optional = False })
     return result
 
-typeField :: Type -> Label -> Type -> Infer ()
-typeField t1 l t2 = do
+generateFieldConstraint :: Type -> Label -> Type -> Bool -> Infer ()
+generateFieldConstraint t1 l t2 required = do
     state <- get
-    put (state { fields = ((t1, l, t2), position state) : fields state })
-
-requireField :: Type -> Label -> Infer ()
-requireField t l = do
-    state <- get
-    put (state { required = ((t, l), position state) : required state })
+    put (state { fields = ((t1, l, t2, required), position state) : fields state })
 

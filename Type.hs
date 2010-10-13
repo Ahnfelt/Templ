@@ -20,9 +20,9 @@ data Type
     deriving Eq
 
 instance Show Type where
-    show t = prettyType (Map.empty, Set.empty, t)
+    show t = prettyType (Map.empty, t)
 
-type FieldConstraint = (Type, Label, Bool, Type)
+type FieldConstraint = (Type, Label, Type, Bool)
 
 type TypeScheme = (Map TypeVariable (Map Label (Type, Bool)), Type)
 

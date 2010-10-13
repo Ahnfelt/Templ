@@ -107,7 +107,7 @@ typeTerm = functionType <|> atomicTypeTerm
             t2 <- typeTerm
             return (TFunction t1 t2)
 
-typeScheme = try (do t <- atomicTypeTerm; return (Map.empty, Set.empty, t)) <|> do
+typeScheme = try (do t <- atomicTypeTerm; return (Map.empty, t)) <|> do
     char '(' 
     whitespace
     constraints' <- constraints
@@ -115,9 +115,8 @@ typeScheme = try (do t <- atomicTypeTerm; return (Map.empty, Set.empty, t)) <|> 
     whitespace
     char ')'
     let fieldConstraints' = Map.unionsWith unionOne 
-            (map (\(a, (l, t)) -> Map.singleton a (Map.singleton l t)) (map snd constraints'))
-    let requiredConstraints' = Set.fromList (map (\(_, (a, (l, _))) -> (a, l)) (filter fst constraints'))
-    return (fieldConstraints', requiredConstraints', t)
+            (map (\(a, l, t, required) -> Map.singleton a (Map.singleton l (t, required))) constraints')
+    return (fieldConstraints', t)
     where
         unionOne map1 map2 = 
             let map = map1 `Map.intersection` map2 in
@@ -142,7 +141,7 @@ typeScheme = try (do t <- atomicTypeTerm; return (Map.empty, Set.empty, t)) <|> 
             char ':'
             whitespace
             t <- typeTerm
-            return (required, (a, (l, t)))
+            return (a, l, t, required)
 
 builtin after =
     [ do
