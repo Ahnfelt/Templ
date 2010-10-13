@@ -53,6 +53,7 @@ infer (EFor x e1 e2) = do
     t2 <- withVariable x (Map.empty, Set.empty, t) (infer e2)
     unify t2 TText
 infer (EType e1 scheme e2) = do
+    -- TODO: Check that that the scheme implies (modulo renaming) the inferred scheme (after inferring e2)
     t <- instantiate scheme
     t' <- infer e1
     unify t t'

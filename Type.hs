@@ -17,6 +17,7 @@ data Type
     | TText
     | TList Type
     | TRecord (Map Label (Type, Bool))
+    deriving Eq
 
 instance Show Type where
     show t = prettyType (Map.empty, Set.empty, t)
