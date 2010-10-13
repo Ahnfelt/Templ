@@ -6,6 +6,8 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Control.Monad
+import Control.Monad.Error
 
 type Label = String
 
@@ -63,22 +65,26 @@ prettyType (records, t) = pretty t
                     fields' = map field (Map.toList fields)
                     field (l, (t, required)) = l ++ (if required then "" else "?") ++ ": " ++ pretty t
 
-foo = undefined
+unifyType :: Type -> Type -> Either String (Map TypeVariable Type)
+unifyType (TVariable a1) (TVariable a2) | a1 == a2 = return Map.empty
+unifyType (TVariable a1) t2 = return (Map.singleton a1 t2)
+unifyType t1 (TVariable a2) = return (Map.singleton a2 t1)
+unifyType (TFunction t1 t2) (TFunction t1' t2') = liftM2 Map.union (unifyType t1 t1') (unifyType t2 t2')
+unifyType (TText) (TText) = return Map.empty
+unifyType (TList t1) (TList t2) = unifyType t1 t2
+unifyType t1@(TRecord fields1) t2@(TRecord fields2) = do
+    let fields1' = Map.filter snd (fields1 `Map.difference` fields2)
+    let fields2' = Map.filter snd (fields2 `Map.difference` fields1)
+    when (not (Map.null fields1')) (Left ("Inferred " ++ show t2 ++ " but expected " ++ show t1))
+    when (not (Map.null fields2')) (Left ("Inferred " ++ show t1 ++ " but expected " ++ show t2))
+    ss <- mapM unifyField (Set.toList (Set.intersection (Map.keysSet fields1) (Map.keysSet fields2)))
+    return (Map.unions ss)
     where
-        unify :: Type -> Type -> Either String (Map TypeVariable Type)
-        unify (TVariable a1) (TVariable a2) | a1 == a2 = return Map.empty
-        unify (TVariable a1) t2 = return (Map.singleton a1 t2)
-        unify t1 (TVariable a2) = return (Map.singleton a2 t1)
-        unify (TFunction t1 t2) (TFunction t1' t2') = liftM2 Map.union (unify t1 t1') (unify t2 t2')
-        unify (TText) (TText) = TText
-        unify (TList t1) (TList t2) = unify t1 t2
-        unify (TRecord fields1) (TRecord fields2) = do
-            let fields1' = Map.filter snd (fields1 `Map.difference` fields2)
-            let fields2' = Map.filter snd (fields2 `Map.difference` fields1)
-            if not (Map.null fields1') 
-                then Left ("Inferred " ++ show t2 ++ " but expected " ++ show t1) 
-                else if not (Map.null fields2') 
-                    then Right ("Inferred " ++ show t1 ++ " but expected " ++ show t2)
-                    else unionWithM unify fields1 fields2
-        unify t1 t2 = Left ("Inferred " ++ show t1 ++ " but expected " ++ show t2)
+        unifyField l = do
+            let (t1, required1') = fields1 Map.! l
+            let (t2, required2') = fields2 Map.! l
+            if required1' /= required2' 
+                then Left ("Same field " ++ show l ++ " required and optional in " ++ show t1 ++ " and " ++ show t2)
+                else unifyType t1 t2
+unifyType t1 t2 = Left ("Inferred " ++ show t1 ++ " but expected " ++ show t2)
 

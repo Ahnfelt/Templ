@@ -44,6 +44,7 @@ infer (ECons e1 e2) = do
     t1 <- infer e1
     t2 <- infer e2
     unify (TList t1) t2
+    return t2
 infer (ENil) = liftM TList (newTypeVariable "nil")
 infer (EFor x e1 e2) = do
     t <- newTypeVariable "for"
@@ -51,6 +52,7 @@ infer (EFor x e1 e2) = do
     unify t1 (TList t)
     t2 <- withVariable x (Map.empty, t) (infer e2)
     unify t2 TText
+    return TText
 infer (EType e1 scheme e2) = do
     -- TODO: Check that that the scheme implies (modulo renaming) the inferred scheme (after inferring e2)
     t <- instantiate scheme
@@ -75,33 +77,20 @@ infer (EConcat e1 e2) = do
     t2 <- infer e2
     unify t1 TText
     unify t2 TText
+    return TText
 infer (EChoice e1 e2) = do
     t1 <- withOptional (infer e1)
     t2 <- infer e2
     unify t1 t2
+    return t1
 
 
-unify :: Type -> Type -> Infer Type
+unify :: Type -> Type -> Infer ()
 unify t1 t2 = do
     s <- liftM substitution get
-    unify' (substitute s t1) (substitute s t2)
-    where
-        unify' (TVariable a1) (TVariable a2) | a1 == a2 = return (TVariable a1)
-        unify' (TVariable a1) t2 = replace a1 t2
-        unify' t1 (TVariable a2) = replace a2 t1
-        unify' (TFunction t1 t2) (TFunction t1' t2') = liftM2 TFunction (unify t1 t1') (unify t2 t2')
-        unify' (TText) (TText) = return TText
-        unify' (TList t1) (TList t2) = liftM TList (unify t1 t2)
-        unify' (TRecord fields1) (TRecord fields2) = do
-            let fields1' = Map.filter snd (fields1 `Map.difference` fields2)
-            let fields2' = Map.filter snd (fields2 `Map.difference` fields1)
-            when (not (Map.null fields1')) $ report ("Inferred " ++ show t2 ++ " but expected " ++ show t1)
-            when (not (Map.null fields2')) $ report ("Inferred " ++ show t1 ++ " but expected " ++ show t2)
-            liftM TRecord (unionWithM unifyField fields1 fields2)
-        unify' t1 t2 = report ("Inferred " ++ show t1 ++ " but expected " ++ show t2)
-        unifyField (t1, required1') (t2, required2') = do
-            t <- unify t1 t2
-            return (t, required1' && required2')
+    case unifyType (substitute s t1) (substitute s t2) of
+        Left error' -> report error'
+        Right s' -> mapM_ (uncurry replace) (Map.toList s')
 
 
 runInfer :: Infer Type -> TypeScheme
@@ -157,8 +146,8 @@ checkFieldConstraint records ((t1, l, t2, required), position) = withPosition po
         (TVariable x, t2) -> case Map.lookup x records of
             Just fields -> case Map.lookup l fields of
                 Just (t2', required') -> do
-                    t <- unify t2 t2'
-                    return (Map.insert x (Map.insert l (t, required || required') fields) records) 
+                    unify t2 t2'
+                    return (Map.insert x (Map.insert l (t2, required || required') fields) records) 
                 Nothing -> return (Map.insert x (Map.insert l (t2, required) fields) records)
             Nothing -> return (Map.insert x (Map.singleton l (t2, required)) records)
         (TRecord fields, t2) -> case Map.lookup l fields of
@@ -187,20 +176,6 @@ report message = do
         Just (name, line, column) -> " at line " ++ show line ++ ", column " ++ show column ++
             (if name /= "" then " in " ++ show name else "")
         Nothing -> "")
-
-unionWithM :: (Ord k, Monad m) => (v -> v -> m v) -> Map k v -> Map k v -> m (Map k v)
-unionWithM function map1 map2 = do
-    let keys1 = Map.keysSet map1
-    let keys2 = Map.keysSet map2
-    let unique1 = Set.toList (Set.difference keys1 keys2)
-    let unique2 = Set.toList (Set.difference keys2 keys1)
-    let common = Set.toList (Set.intersection keys1 keys2)
-    let unique1' = zip unique1 (map (map1 Map.!) unique1)
-    let unique2' = zip unique2 (map (map2 Map.!) unique2)
-    let common1' = map (map1 Map.!) common
-    let common2' = map (map2 Map.!) common
-    common' <- mapM (uncurry function) (zip common1' common2')
-    return (Map.fromList (zip common common' ++ unique1' ++ unique2'))
 
 withVariable :: Variable -> TypeScheme -> Infer a -> Infer a
 withVariable x scheme monad = do
