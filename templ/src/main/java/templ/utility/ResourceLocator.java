@@ -7,11 +7,17 @@ public class ResourceLocator {
     public static String locate(String file) {
         URL resource = ResourceLocator.class.getClassLoader().getResource(file);
         if (resource == null) {
-            //System.out.println(file+" NOT FOUND");
-            return null;
+            throw new ResourceLocatorException(file);
         } else {
-            //System.out.println("  FOUND URL "+file+" at "+resource);
             return resource.getPath();
         }
+    }
+
+    private static class ResourceLocatorException extends RuntimeException {
+        public ResourceLocatorException(String file) {
+            super("Cannot find resource: "+file);   
+        }
+
+
     }
 }

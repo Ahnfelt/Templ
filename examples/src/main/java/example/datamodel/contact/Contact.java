@@ -13,7 +13,7 @@ public class Contact {
         this.email = email;
     }
 
-    public String getNameX() {
+    public String getName() {
         return name;
     }
 

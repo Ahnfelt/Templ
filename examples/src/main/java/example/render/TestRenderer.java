@@ -27,7 +27,4 @@ public interface TestRenderer extends Renderer {
 
     @Template("templates/bible.templ")
     public String renderEnos(Enos _);
-
-    @Template("templates/none.templ")
-    public String renderSister(Sister _);
 }
