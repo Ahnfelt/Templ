@@ -48,5 +48,6 @@ main = do
                     Right file' -> file'
             let file'' = ELambda "data" file'
             let file''' = runInfer (infer file'')
+            putStrLn (show file')
             putStrLn (prettyType file''')
 
