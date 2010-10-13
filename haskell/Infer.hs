@@ -53,17 +53,6 @@ infer (EFor x e1 e2) = do
     t2 <- withVariable x (Map.empty, t) (infer e2)
     unify t2 TText
     return TText
-{-
-infer (EType e1 scheme e2) = do
-    -- TODO: Check that that the scheme implies (modulo renaming) the inferred scheme (after inferring e2)
-    t2 <- infer e2
-    t1 <- infer e1
-    scheme' <- generalize t1
-    t <- instantiate scheme
-    unify t t1
-    when (not (entails (fst scheme) (fst scheme'))) (report (prettyType scheme ++ " does not entail " ++ prettyType scheme'))
-    return t2
--}    
 infer (EAccess e l) = do
     t1 <- infer e
     t2 <- newTypeVariable "access"
@@ -89,11 +78,6 @@ infer (EChoice e1 e2) = do
     unify t1 t2
     return t1
 
-
-entails :: Map TypeVariable (Map Label (Type, Bool)) -> Map TypeVariable (Map Label (Type, Bool)) -> Bool
-entails = Map.isSubmapOfBy (Map.isSubmapOfBy (\(_, b) (_, a) -> implies a b))
-    where
-        a `implies` b = not a && b
 
 unify :: Type -> Type -> Infer ()
 unify t1 t2 = do
@@ -235,7 +219,7 @@ withOptional monad = do
     put (state { optional = True })
     result <- monad
     state' <- get
-    put (state' { optional = False })
+    put (state' { optional = optional state })
     return result
 
 generateFieldConstraint :: Type -> Label -> Type -> Bool -> Infer ()
