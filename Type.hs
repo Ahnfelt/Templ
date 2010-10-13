@@ -63,3 +63,22 @@ prettyType (records, t) = pretty t
                     fields' = map field (Map.toList fields)
                     field (l, (t, required)) = l ++ (if required then "" else "?") ++ ": " ++ pretty t
 
+foo = undefined
+    where
+        unify :: Type -> Type -> Either String (Map TypeVariable Type)
+        unify (TVariable a1) (TVariable a2) | a1 == a2 = return Map.empty
+        unify (TVariable a1) t2 = return (Map.singleton a1 t2)
+        unify t1 (TVariable a2) = return (Map.singleton a2 t1)
+        unify (TFunction t1 t2) (TFunction t1' t2') = liftM2 Map.union (unify t1 t1') (unify t2 t2')
+        unify (TText) (TText) = TText
+        unify (TList t1) (TList t2) = unify t1 t2
+        unify (TRecord fields1) (TRecord fields2) = do
+            let fields1' = Map.filter snd (fields1 `Map.difference` fields2)
+            let fields2' = Map.filter snd (fields2 `Map.difference` fields1)
+            if not (Map.null fields1') 
+                then Left ("Inferred " ++ show t2 ++ " but expected " ++ show t1) 
+                else if not (Map.null fields2') 
+                    then Right ("Inferred " ++ show t1 ++ " but expected " ++ show t2)
+                    else unionWithM unify fields1 fields2
+        unify t1 t2 = Left ("Inferred " ++ show t1 ++ " but expected " ++ show t2)
+
