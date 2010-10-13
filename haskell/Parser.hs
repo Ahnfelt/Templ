@@ -70,8 +70,7 @@ atomicTypeTerm = typeParenthesis <|> typeVariable <|> atomicType <|> listType <|
             return t
         typeVariable = liftM TVariable lowerName
         atomicType = do
-            name <- upperName
-            when (name /= "String") (unexpected ("unknown type " ++ show name))
+            char '*'
             return TText
         listType = do
             char '['

@@ -58,7 +58,7 @@ prettyType (records, t) = pretty t
                         optional required = if required then "" else "?"
                 _ -> a
             TFunction t1 t2 -> pretty t1 ++ " -> " ++ pretty t2
-            TText -> "String"
+            TText -> "*"
             TList t -> "[" ++ pretty t ++ "]"
             TRecord fields -> "(" ++ intercalate ", " fields' ++ ")"
                 where
