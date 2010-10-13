@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <title>$title</title>
+    </head>
+    <body>
+        <div id="menu">
+            $showItem($menu)
+        </div>
+
+        <div id="content">
+            $employee:$employees{
+                <b>$employee.name</b>
+                <a href="mailto:$employee.email">$employee.email</a>
+            }
+        </div>
+    </body>
+</html>
+
+$showItems($items) {
+    <ul>
+    $item:$items{
+        <li>
+            <div>{<a href="$item.link">$item.name</a> | $item.name}</div>
+            {$showItems($item.items)|}
+        </li>
+    }
+    </ul>
+}
+        

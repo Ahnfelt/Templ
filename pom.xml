@@ -1,0 +1,144 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <version>1.0-SNAPSHOT</version>
+    <groupId>templ</groupId>
+    <artifactId>all</artifactId>
+    <packaging>pom</packaging>
+    <name>all</name>
+    <url>patch-tag.com/r/Ahnfelt/templ</url>
+    <description>A template language with statically typed bindings for Java.</description>
+
+    <modules>
+        <module>templ</module>
+        <module>examples</module>
+    </modules>
+
+    <developers>
+        <developer>
+            <name>Michael Flænø Werk</name>
+            <email>mfwerk@gmail.com</email>
+            <organization>DIKU</organization>
+            <organizationUrl/>
+            <id>mwk</id>
+        </developer>
+        <developer>
+            <name>Joakim Ahnfelt-Rønne</name>
+            <email>ahnfelt@gmail.com</email>
+            <organization>DIKU</organization>
+            <organizationUrl/>
+            <id>jar</id>
+        </developer>
+    </developers>
+
+    <repositories>
+        <repository>
+            <id>official1</id>
+            <name>Official Maven Repository Mirror 1</name>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <id>official2</id>
+            <name>Official Maven Repository Mirror 2</name>
+            <url>http://repo2.maven.org/maven2</url>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots />
+            <id>apache.snapshots</id>
+            <name>Maven Plugin Snapshots</name>
+            <url>
+                http://people.apache.org/repo/m2-snapshot-repository
+            </url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>ibiblio</id>
+            <name>The ibiblio rep</name>
+            <url>http://www.ibiblio.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>1.6</source>
+                        <target>1.6</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>apt-maven-plugin</artifactId>
+                    <configuration>
+                        <factory>templ.apt.Factory</factory>
+                        <force>true</force>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>templ</groupId>
+                            <artifactId>templ</artifactId>
+                            <version>1.0-SNAPSHOT</version>
+                            <exclusions>
+                                <exclusion>
+                                    <groupId>com.sun</groupId>
+                                    <artifactId>tools</artifactId>
+                                </exclusion>
+                            </exclusions>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>templ</groupId>
+                <artifactId>templ</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>templ</groupId>
+                <artifactId>examples</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.1</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.sun</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.6</version>
+                <scope>system</scope>
+                <!--<systemPath>${java.home}/../lib/tools.jar</systemPath>-->
+                <systemPath>/usr/lib/jvm/java-6-sun/lib/tools.jar</systemPath>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>1.6</version>
+                <!--<scope>system</scope>
+                <systemPath>${project.basedir}/lib/annotations.jar</systemPath>-->
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

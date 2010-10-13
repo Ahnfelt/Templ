@@ -1,0 +1,25 @@
+ShowPersons ($persons: [(name:*, email:*?, phone:*?)]): * {
+  @for $p : $persons {
+    <div>
+      {<a href="mailto:$p.email">$p.name</a>|<b>$p.name</b>}
+      {<br><b>Phone></b>: $p.phone | }
+    </div>
+  }
+}
+
+ShowPage ($page: (title: *,
+                  teachers: [(name:*, email:*?, phone:*?, office: *?)],
+                  students: [(name:*, email:*?, phone:*?)]?)): * {
+  <html>
+    <head>
+      <title>$page.title</title>
+    </head>
+    <body>
+      <h1>Teachers</h1>
+      @ShowPersons $page.teachers
+
+      {<h1>Students</h1>
+      @ShowPersons $page.students | }
+    </body>
+  </html>
+}
