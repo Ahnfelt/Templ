@@ -157,7 +157,7 @@ List literals are enclosed in brackets `[]` and comma-delimited, eg. `[{a}, {b},
 Escaping and XSS prevention
 ---------------------------
 
-*To be implemented, but here's the idea*
+*Tentative design, but here's the idea*
 
 User input may contain characters that have special meaning in the document that's being
 generated. For example, the symbols `<>/&"'` are special in HTML. If we insert text 
@@ -201,7 +201,7 @@ would emit `Why 0 < 1`.
 Translation and localization
 ----------------------------
 
-*To be implemented, but here's the idea*
+*Tentative design, but here's the idea*
 
 Templ supports sentence-based translation. To mark a sentence for translation, prefix
 it with `@` and enclose it in curly braces, eg.
