@@ -38,7 +38,7 @@ Ruling out failure
 
 Both the Templ and the JSP examples beg the question; what happens if the 
 `.name` field is missing? Some template engines will report an error to
-the end user, some will insert a bogus value such as "null", and some will 
+the end user, some will insert a bogus string such as "null", and some will 
 insert the empty string. Either way, the end user is likely to see a page 
 that is broken. The problem is that traditionally there is no way to 
 distinguish between a field that is always present and a field that might 
