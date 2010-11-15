@@ -219,7 +219,7 @@ If `danish` is chosen as the language, the template yields `<h1>Velkommen til mi
 Translation braces can be parameterized. Anything but plain text and escape sequences are 
 considered parameter values. For example,
 
-    @{I've got $data.count apples!}
+    <strong>@{I've got $data.count apples!}</strong>
 
 Would fit the translation strings:
 
