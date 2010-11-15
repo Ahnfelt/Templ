@@ -242,6 +242,9 @@ Translation files are in UTF-8.
 
 Strings will be escaped after translation.
 
+*What about formatting of numbers, dates, etc?*
+
+
 Calling templates from Java
 ---------------------------
 
