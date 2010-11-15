@@ -123,7 +123,7 @@ For example,
 
     Hello, $person.name.first.
 
-Will contian the final dot `.` (when $person.name.first == {Jack}):
+Will contian the final dot `.` (assume $person.name.first == {Jack}):
 
     Hello, Jack.
 
@@ -132,7 +132,7 @@ parenthesis in text mode:
 
     Hello, {$person.name}.first.
 
-Will display as (for $person.name == {Peter}):
+Will display as (assume $person.name == {Peter}):
 
     Hello, Peter.first.
 
