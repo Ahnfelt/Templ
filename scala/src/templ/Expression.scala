@@ -1,6 +1,6 @@
 package templ
 
-abstract class Expression
+sealed trait Expression
 
 object Expression {
   type Variable = String
@@ -22,4 +22,12 @@ object Expression {
   case class ERecord (fields: Map[Label, (Expression, Required)]) extends Expression
   case class EConcat (left: Expression, right: Expression) extends Expression
   case class EChoice (primary: Expression, secondary: Expression) extends Expression
+
+  def errorWithPosition(message: String, position: Position) = {
+    position match {
+      case (filename, line, column) =>
+        message + " at line " + line + ", column " + column +
+                (if(!filename.isEmpty) " in '" + filename + "'" else "")
+    }
+  }
 }

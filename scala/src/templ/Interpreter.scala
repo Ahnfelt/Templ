@@ -49,6 +49,7 @@ object Interpreter extends Application {
               case v => report (v + " is not a string but is the result of an iteration", position)
             }
             VText(text.foldLeft("")(_ + _))
+          case v => report (v + " is not a list and thus cannot be iterated over", position)
         }
       case ELookup (record, label) =>
         val v = interpret(record, environment, position)
@@ -78,13 +79,12 @@ object Interpreter extends Application {
         try {
           interpret(primary, environment, position)
         } catch {
-          case LookupException(_) => interpret(secondary, environment, position)
+          case _: LookupException => interpret(secondary, environment, position)
         }
     }
 
   def report [T] (message: String, position: Position) : T = {
-    val error = "Error at " + position + ": " + message + "."
-    throw new RuntimeException(error)
+    throw new RuntimeException(errorWithPosition(message, position))
   }
 
 }

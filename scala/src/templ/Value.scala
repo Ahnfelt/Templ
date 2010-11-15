@@ -2,7 +2,7 @@ package templ
 
 import templ.Expression._
 
-abstract class Value
+sealed trait Value
 
 object Value {
   case class VLambda (context: Map[Variable, Value], variable: Variable, body: Expression) extends Value
