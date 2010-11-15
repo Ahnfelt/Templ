@@ -232,6 +232,8 @@ the template and the variables in the primary language are positional, whereas t
 between the variables in primary and secondary languages are named, so that it is possible to
 swap their order if the language requires it.
 
+Strings will be escaped after translation.
+
 Calling templates from Java
 ---------------------------
 
