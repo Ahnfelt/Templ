@@ -153,6 +153,46 @@ Strings are made by using textmode curly braces, eg. `{Copenhagen}`.
 
 List literals are enclosed in brackets `[]` and comma-delimited, eg. `[{a}, {b}, {c}]`.
 
+
+Escaping and XSS prevention
+---------------------------
+
+*To be implemented, but here's the idea*
+
+User input may contain characters that have special meaning in the document that's being
+generated. For example, the symbols `<>/&"'` are special in HTML. If we insert text 
+containing these, the best case scenario is that the page displays wrong. The worst case
+scenario is that the user supplied a malicious input, such as a `<script>...</script>`,
+which could enable him to execute code under the credentials of another user. This 
+security exploit is known as [XSS](http://en.wikipedia.org/wiki/Cross-site_scripting),
+and is one of many related code execution vulnerabilities.
+
+Although some sites filter these characters from the input, we cannot recommend this 
+route. First, it swallows completely valid user input; this is why code examples
+are sometimes swallowed on forums and blogs. Second, you cannot know which characters are
+dangerous unless you know exactly how the data is going to be used in your entire code
+base now and in all future; what to filter for HTML is different from what to filter in
+SQL, Bash, CSS, JSON, YAML, or whatever else you might need some day. 
+
+Instead, escape user input when *using* it, because only at that point can you know what 
+characters are problematic and how to properly escape them without loosing any data. 
+It is unfortunately quite error prone (and as such a security risk) to manually escape 
+every usage of user input, but often libraries will relieve you of this tedious duty -
+for example, SQL libraries typically have parameterized or prepared statements that 
+automatically escape all parameters.
+
+In Templ, all strings that are inserted are automatically escaped using the escape 
+mechanism that is in scope. The default escape mechansim is `@html`, but let's make it 
+explicit: 
+
+    @html {
+        <h1>$title</h1>
+    }
+    
+If $title is `Why 0 < 1`, the result will be `<h1>Why 0 &lt; 1</h1>`. The less than `<`
+character was automatically escaped using the @html escape mechanism.
+
+
 Calling templates from Java
 ---------------------------
 

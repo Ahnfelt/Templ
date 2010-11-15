@@ -2,9 +2,9 @@ package templ
 
 import templ.Value._
 import scala.collection.immutable.Map
+import scala.collection.JavaConversions._
 import java.lang.reflect.Method
 import java.lang.Iterable
-import scala.collection.JavaConversions._
 
 object JavaValues {
   def fromObject(value: AnyRef): Value = {
