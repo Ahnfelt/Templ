@@ -198,6 +198,39 @@ desirable to insert code fragments, and in that case you can use @raw. For examp
 would emit `Why 0 < 1`.
 
 
+Translation and localization
+----------------------------
+
+*To be implemented, but here's the idea*
+
+Templ supports sentence-based translation. To mark a sentence for translation, prefix
+it with `@` and enclose it in curly braces, eg.
+
+    <h1>@{Welcome to my site!}</h1>
+
+By default, the text inside the braces will be shown. However, a separate translation
+file like this can be used (similar to [gettext](http://www.gnu.org/software/gettext/manual/gettext.html#PO-Files)):
+
+    english {Welcome to my site!}
+    danish {Velkommen til min side!}
+
+If `danish` is chosen as the language, the template yields `<h1>Velkommen til min side!</h1>`.
+
+Translation braces can be parameterized. Anything but plain text and escape sequences are 
+considered parameter values. For example,
+
+    @{I've got $data.count apples!}
+
+Would fit the translation strings:
+
+    english {I've got $number apples!}
+    danish {Jeg har $number æbler!}
+
+In the translation file, the strings can only contain simple variables, optionally surrounded 
+by a single pair of curly braces `{}` for disambiguation. The matching between the variables in
+the template and the variables in the primary language are positional, whereas the matching 
+between the variables in primary and secondary languages are named.
+
 Calling templates from Java
 ---------------------------
 
