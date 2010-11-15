@@ -181,16 +181,21 @@ every usage of user input, but often libraries will relieve you of this tedious 
 for example, SQL libraries typically have parameterized or prepared statements that 
 automatically escape all parameters.
 
-In Templ, all strings that are inserted are automatically escaped using the escape 
-mechanism that is in scope. The default escape mechansim is `@html`, but let's make it 
-explicit: 
+In Templ, all strings that are inserted are automatically escaped using the innermost 
+escape mechanism that is in scope. The default escape mechansim is `@html`, but let's 
+make it explicit: 
 
     @html {
         <h1>$title</h1>
     }
     
 If $title is `Why 0 < 1`, the result will be `<h1>Why 0 &lt; 1</h1>`. The less than `<`
-character was automatically escaped using the @html escape mechanism.
+character was automatically escaped using the @html escape mechanism. Sometimes it is
+desirable to insert code fragments, and in that case you can use @raw. For example, 
+
+    @raw $title
+    
+would emit `Why 0 < 1`.
 
 
 Calling templates from Java
