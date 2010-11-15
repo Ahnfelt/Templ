@@ -229,7 +229,8 @@ Would fit the translation strings:
 In the translation file, the strings can only contain simple variables, optionally surrounded 
 by a single pair of curly braces `{}` for disambiguation. The matching between the variables in
 the template and the variables in the primary language are positional, whereas the matching 
-between the variables in primary and secondary languages are named.
+between the variables in primary and secondary languages are named, so that it is possible to
+swap their order if the language requires it.
 
 Calling templates from Java
 ---------------------------
