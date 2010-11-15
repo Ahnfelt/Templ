@@ -234,6 +234,10 @@ the template and the variables in the primary language are positional, whereas t
 between the variables in primary and secondary languages are named, so that it is possible to
 swap their order if the language requires it.
 
+The first language in the tranlsation file is the primary language, and every new entry for
+this language signifies a new key; all entries in other languages with that key must come
+immediately after.
+
 Translation files are in UTF-8. 
 
 Strings will be escaped after translation.
