@@ -3,6 +3,10 @@ Templ readme
 
 ![Conceptual overview](http://imgur.com/Glaru.png)
 
+
+Introduction
+------------
+
 Templ is a language for specifying document templates.
 The most common usage is to generate HTML documents on the server side.
 The idea is that you specify a template and then apply the template to
