@@ -9,8 +9,8 @@ object Test extends Application {
   val v = Interpreter.interpret(e, Map(), ("", 0, 0))
   println(v)
 
-  val p = "@for $x [{a}, {b}, {c}] {$x}"
-  val result = Parser.parseAll(Parser.textExpression, p)
+  val program = "@for $x [{a}, {b}, {c}] {$x}"
+  val result = Parser.parseAll(Parser.textExpression, program)
   println(result.get)
   println(Interpreter.interpret(result.get, Map(), ("", 0, 0)))
 
