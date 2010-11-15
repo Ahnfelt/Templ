@@ -153,6 +153,8 @@ Strings are made by using textmode curly braces, eg. `{Copenhagen}`.
 
 List literals are enclosed in brackets `[]` and comma-delimited, eg. `[{a}, {b}, {c}]`.
 
+Template files are in UTF-8.
+
 
 Escaping and XSS prevention
 ---------------------------
@@ -231,6 +233,8 @@ by a single pair of curly braces `{}` for disambiguation. The matching between t
 the template and the variables in the primary language are positional, whereas the matching 
 between the variables in primary and secondary languages are named, so that it is possible to
 swap their order if the language requires it.
+
+Translation files are in UTF-8. 
 
 Strings will be escaped after translation.
 
