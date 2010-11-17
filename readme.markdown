@@ -256,6 +256,13 @@ The first language in the tranlsation file is the primary language, and every ne
 this language signifies a new key; all entries in other languages with that key must come
 immediately after.
 
+If you'd rather have short keys than using a natural language string, then you're free to 
+do that too. Just call your primary language something else, like "key", ie.
+
+    key {apples-oranges}
+    english {apples and oranges}
+    danish {æbler og appelsiner}
+
 Translation files are in UTF-8. 
 
 Strings will be escaped after translation.
