@@ -117,7 +117,28 @@ Iterating over lists
 
 Modules and imports
 -------------------
+
 *To be written*
+
+
+Branching on type
+-----------------
+
+*To be implemented, but here's the idea*
+
+Assuming `$fruit` contains an unknown type of fruit,
+you can branch on the type by using `@case`:
+
+    {
+        @case Apple $fruit 
+        It's an apple! The $$fruit has type Apple in here.
+    |
+        @case Banana $fruit
+        It's a banana! The $$fruit has type Banana in here.
+    |
+        Some other delicious fruit! There must be a default case like this.
+    }
+
 
 
 Syntactic details
