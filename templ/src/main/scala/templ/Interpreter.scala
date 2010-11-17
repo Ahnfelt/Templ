@@ -7,10 +7,14 @@ import templ.Value._
 object Interpreter extends Application {
   case class LookupException(position: Position) extends RuntimeException
 
-  def interpretFile (fileName: String, javaValue: AnyRef) : Value = {
+  def interpretFile (fileName: String, javaValue: AnyRef) : String = {
     val value = JavaValues.fromObject(javaValue)
     val expression = Parser.parseFile(fileName)
-    interpret(expression, Map(("data", value)), (fileName, 0, 0))
+    val result = interpret(expression, Map(("data", value)), (fileName, 0, 0))
+    result match {
+      case VText(text) => text
+      case _ => report("Template does not return a string", (fileName, 0, 0))
+    }
   }
 
   def interpret (expression: Expression, environment: Map[Variable, Value], position: Position) : Value =
