@@ -7,6 +7,12 @@ import templ.Value._
 object Interpreter extends Application {
   case class LookupException(position: Position) extends RuntimeException
 
+  def interpretFile (fileName: String, javaValue: AnyRef) : Value = {
+    val value = JavaValues.fromObject(javaValue)
+    val expression = Parser.parseFile(fileName)
+    interpret(expression, Map(("data", value)), (fileName, 0, 0))
+  }
+
   def interpret (expression: Expression, environment: Map[Variable, Value], position: Position) : Value =
     expression match {
       case EAt (position, expression) => interpret(expression, environment, position)

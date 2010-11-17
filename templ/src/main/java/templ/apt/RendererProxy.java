@@ -1,16 +1,13 @@
 package templ.apt;
 
+import templ.*;
 import templ.annotation.Template;
 import templ.exception.TemplateException;
-import templ.mapper.ValueMapper;
-import templ.utility.Files;
 import templ.utility.ResourceLocator;
-import templ.utility.Strings;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Method;
-import java.io.*;
 
 public class RendererProxy<T> implements InvocationHandler {
     /**
@@ -43,9 +40,12 @@ public class RendererProxy<T> implements InvocationHandler {
                 throw new TemplateException("Method " + method.getName() + " in " + o.getClass().getName() +
                         " has no @Template(\"myfile.templ\") annotation.");
             }
-            String value = ValueMapper.convert(objects[0]);
-            try {
-                String templateFile = ResourceLocator.locate(template.value());
+            String templateFile = ResourceLocator.locate(template.value());
+            return Interpreter.interpretFile(templateFile, objects[0]);
+
+            //String value = ValueMapper.convert(objects[0]);
+            /*try {
+
                 String executableFile = ResourceLocator.locate("Templ");
                 String[] command = {executableFile, "run", templateFile, value};
                 System.out.println("EXEC: "+Strings.separateBy(command, " "));
@@ -62,7 +62,7 @@ public class RendererProxy<T> implements InvocationHandler {
                 throw new TemplateException(e);
             } catch(IOException e) {
                 throw new TemplateException(e);
-            }
+            } */
         }
     }
 }

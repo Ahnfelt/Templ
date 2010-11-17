@@ -10,6 +10,10 @@
     <url>patch-tag.com/r/Ahnfelt/templ</url>
     <description>A template language with statically typed bindings for Java.</description>
 
+    <properties>
+        <scala.version>2.8.1</scala.version>
+    </properties>
+
     <modules>
         <module>templ</module>
         <module>examples</module>
@@ -43,6 +47,11 @@
             <name>Official Maven Repository Mirror 2</name>
             <url>http://repo2.maven.org/maven2</url>
         </repository>
+        <repository>
+            <id>scala-tools.org</id>
+            <name>Scala-tools Maven2 Repository</name>
+            <url>http://scala-tools.org/repo-releases</url>
+        </repository>        
     </repositories>
 
     <pluginRepositories>
@@ -67,6 +76,11 @@
             <releases>
                 <updatePolicy>never</updatePolicy>
             </releases>
+        </pluginRepository>
+        <pluginRepository>
+            <id>scala-tools.org</id>
+            <name>Scala-tools Maven2 Repository</name>
+            <url>http://scala-tools.org/repo-releases</url>
         </pluginRepository>
     </pluginRepositories>
 
@@ -141,4 +155,39 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>Scala Project</id>
+            <activation>
+                <file>
+                    <exists>src/main/scala</exists>
+                </file>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                    <version>${scala.version}</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.scala-tools</groupId>
+                        <artifactId>maven-scala-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>compile</goal>
+                                    <goal>testCompile</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
 </project>

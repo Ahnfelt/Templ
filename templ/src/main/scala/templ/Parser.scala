@@ -80,4 +80,9 @@ object Parser extends RegexParsers {
   }
   def atomicTextExpression = withPosition(textInsert | text | textEscape | common(textExpression))
   def textExpression: Parser[Expression] = textChoice
+
+  def parseFile(fileName: String) : Expression = {
+    val content = io.Source.fromFile(fileName).mkString
+    parseAll(textExpression, content).get
+  }
 }
