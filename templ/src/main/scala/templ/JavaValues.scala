@@ -15,7 +15,7 @@ object JavaValues {
         val methods = value.getClass.getMethods
         val getters = methods.filter(isGetter _)
         val fields = getters.map(method => (label(method), call(value, method)))
-        VRecord(Map(fields: _*))
+        VRecord(Map((for((l, Some(v)) <- fields) yield (l, v)): _*))
     }
   }
 
@@ -24,8 +24,12 @@ object JavaValues {
     method.getName().startsWith("get")
   }
 
-  def call(record: Object, method: Method): Value = {
-    fromObject(method.invoke(record))
+  def call(record: Object, method: Method): Option[Value] = {
+    method.invoke(record) match {
+      case null => None
+      case value => Some(fromObject(value))
+    }
+
   }
 
   def label(method: Method): String = {
