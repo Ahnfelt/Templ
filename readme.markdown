@@ -1,9 +1,6 @@
 Templ readme
 ============
 
-![Conceptual overview](http://imgur.com/Glaru.png)
-
-
 Introduction
 ------------
 
