@@ -17,6 +17,10 @@ object Expression {
   case class EText (text: Text) extends Expression
   case class ECons (head: Expression, tail: Expression) extends Expression
   case class ENil extends Expression
+  case class EFirst (list: Expression) extends Expression
+  case class ELast (list: Expression) extends Expression
+  case class EFront (list: Expression) extends Expression
+  case class EBack (list: Expression) extends Expression
   case class EFor (variable: Variable, list: Expression, body: Expression) extends Expression
   case class ELookup (record: Expression, label: Label) extends Expression
   case class ERecord (fields: Map[Label, (Expression, Required)]) extends Expression

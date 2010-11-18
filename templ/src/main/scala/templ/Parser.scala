@@ -43,7 +43,11 @@ object Parser extends RegexParsers {
             variableName ~ whitespace ~ expression ~ whitespace ~ expression ^^ {
       case x ~ _ ~ e1 ~ _ ~ e2 =>
         EFor(x, e1, e2)
-    }
+    } |
+    keyword("first") ~> whitespace ~> expression ^^ { EFirst(_) } |
+    keyword("last") ~> whitespace ~> expression ^^ { ELast(_) } |
+    keyword("front") ~> whitespace ~> expression ^^ { EFront(_) } |
+    keyword("back") ~> whitespace ~> expression ^^ { EBack(_) }
   def list = "[" ~> repsep(whitespace ~> expression, whitespace ~ ",") <~ "]" ^^ {
     case es =>
       es.foldRight[Expression](ENil())(ECons(_, _))

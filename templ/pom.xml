@@ -24,6 +24,6 @@
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-        </dependency>        
+        </dependency>
     </dependencies>
 </project>

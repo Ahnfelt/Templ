@@ -7,7 +7,7 @@
     <artifactId>all</artifactId>
     <packaging>pom</packaging>
     <name>all</name>
-    <url>patch-tag.com/r/Ahnfelt/templ</url>
+    <url>https://github.com/Ahnfelt/Templ</url>
     <description>A template language with statically typed bindings for Java.</description>
 
     <properties>
