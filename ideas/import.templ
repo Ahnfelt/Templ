@@ -1,0 +1,21 @@
+@import base.XHtml
+@import base.MyLib (..)
+@import base.MyLib (Link, Paragraph, Emph)
+@import base (MyLib)
+
+@import base.MyLibx
+@import <base.MyLib.*>
+@import <base.MyLib.(Link, Paragraph, Emph)>
+
+@splatter MyLib
+
+@XHtml (
+    head: {<meta />}
+    body: {
+        <h1>@Emph {My Page}</h1>
+        @for $link $data.links {@Paragraph {@Link $x}}
+    }
+)
+
+@local $x $y
+

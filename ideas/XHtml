@@ -1,0 +1,9 @@
+<html>
+    <head>
+        $data.head
+    </head>
+    <body>
+        $data.body
+    </body>
+</html>
+
