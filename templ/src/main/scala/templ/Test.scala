@@ -1,6 +1,7 @@
 package templ
 
-import _root_.templ.Value.VText
+import scala.util.parsing.input.NoPosition
+import templ.Value._
 import templ.Expression._
 import templ.Text._
 import java.util.Collections
@@ -13,7 +14,7 @@ object Test extends Application {
 
   {
     val e = EChoice(ELookup(ERecord(Map(("x", (EText(SString("first")), true)))), "x"), EText(SString("second")))
-    val v = Interpreter.interpret(e, Map(), ("", 0, 0))
+    val v = Interpreter.interpret(e, Map(), ("", NoPosition))
     println(v)
   }
 
@@ -23,7 +24,7 @@ object Test extends Application {
       val result = Parser.parseAll(Parser.textExpression, program)
       println(program)
       println(result.get)
-      println(Interpreter.interpret(result.get, map, ("", 0, 0)))
+      println(Interpreter.interpret(result.get, map, ("", NoPosition)))
       println()
     }
     run("@for $x [{a}, {b}, {c}] {$x}")
@@ -33,6 +34,9 @@ object Test extends Application {
     run("@back [{a}, {b}, {c}]")
     run("@first [] | No elements")
     run("@html {@let $foo {<b>Foo</b>} {$foo $bar}}", Map(("bar", VText(SString("<i>bar</i> & baz")))))
+    run("""This is a long string with
+          @for $x {foo} {}
+          a for loop over a non-list""")
   }
 
   {

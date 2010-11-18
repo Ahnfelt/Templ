@@ -4,7 +4,7 @@ sealed trait Expression
 
 object Expression {
   type Variable = String
-  type Position = (String, Int, Int)
+  type Position = (String, scala.util.parsing.input.Position)
   type Label = String
   type Required = Boolean
 
@@ -25,14 +25,14 @@ object Expression {
   case class EFor(variable: Variable, list: Expression, body: Expression) extends Expression
   case class ELookup(record: Expression, label: Label) extends Expression
   case class ERecord(fields: Map[Label, (Expression, Required)]) extends Expression
-  case class EConcat(left: Expression, right: Expression) extends Expression
+  case class EAppend(left: Expression, right: Expression) extends Expression
   case class EChoice(primary: Expression, secondary: Expression) extends Expression
 
   def errorWithPosition(message: String, position: Position) = {
     position match {
-      case (filename, line, column) =>
-        message + " at line " + line + ", column " + column +
-                (if(!filename.isEmpty) " in '" + filename + "'" else "")
+      case (filename, lineColumn) =>
+        message + " at line " + lineColumn.line + ", column " + lineColumn.column +
+                (if(!filename.isEmpty) " in '" + filename + "':\n" else ":\n") + lineColumn.longString
     }
   }
 }

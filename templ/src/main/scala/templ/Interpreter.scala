@@ -1,5 +1,6 @@
 package templ
 
+import scala.util.parsing.input.NoPosition
 import collection.immutable._
 import templ.Expression._
 import templ.Value._
@@ -13,10 +14,10 @@ object Interpreter extends Application {
   def interpretFile(fileName: String, javaValue: AnyRef) : String = {
     val value = JavaValues.fromObject(javaValue)
     val expression = Parser.parseFile(fileName)
-    val result = interpret(expression, Map(("data", value)), (fileName, 0, 0))
+    val result = interpret(expression, Map(("data", value)), (fileName, NoPosition))
     result match {
       case VText(text) => SEscape(text, Text.escapeHtml).toString
-      case _ => report("Template does not return a string", (fileName, 0, 0))
+      case _ => report("Template does not return a string", (fileName, NoPosition))
     }
   }
 
@@ -112,7 +113,7 @@ object Interpreter extends Application {
       case ERecord(fields) =>
         val fields2 = fields.mapValues({ case (e, _) => interpret(e, environment, position) })
         VRecord(fields2)
-      case EConcat(left, right) =>
+      case EAppend(left, right) =>
         val text1 = interpret(left, environment, position) match {
           case VText(text) => text
           case v => report(v + " is not a string on the left side of this concatenation", position)

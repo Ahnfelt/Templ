@@ -83,7 +83,7 @@ object Parser extends RegexParsers {
   }
   def text = "[^$@{}|]+".r ^^ { string => EText(SEscape(SString(string), identity)) }
   def textEscape = "[$][$@{}|]".r ^^ {text => EText(SString(text.drop(1)))}
-  def textAppend = rep1(atomicTextExpression) ^^ {es => es.reduceLeft(EConcat(_, _))}
+  def textAppend = rep1(atomicTextExpression) ^^ {es => es.reduceLeft(EAppend(_, _))}
   def textChoice = rep1sep(opt(textAppend) ^^ {_.getOrElse(EText(SString("")))}, "|") ^^ {
     case es =>
       es.reduceLeft(EChoice(_, _))
@@ -92,9 +92,9 @@ object Parser extends RegexParsers {
   def textExpression: Parser[Expression] = textChoice
 
   def withPosition(parser: Parser[Expression]): Parser[Expression] = {
-    class PositionHolder extends Positional
-    positioned(success(new PositionHolder)) ~ parser ^^ {
-      case positionHolder ~ e => EAt(("", positionHolder.pos.line, positionHolder.pos.column), e)
+    class ColumnLine extends Positional
+    positioned(success(new ColumnLine)) ~ parser ^^ {
+      case columnLine ~ e => EAt(("", columnLine.pos), e)
     }
   }
 
