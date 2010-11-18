@@ -3,6 +3,7 @@ package templ
 import collection.immutable._
 import templ.Expression._
 import templ.Value._
+import templ.Text._
 
 object Interpreter extends Application {
   abstract class AlternativeException(val position: Position) extends RuntimeException
@@ -14,7 +15,7 @@ object Interpreter extends Application {
     val expression = Parser.parseFile(fileName)
     val result = interpret(expression, Map(("data", value)), (fileName, 0, 0))
     result match {
-      case VText(text) => text
+      case VText(text) => SEscape(text, Text.escapeHtml).toString
       case _ => report("Template does not return a string", (fileName, 0, 0))
     }
   }
@@ -42,7 +43,13 @@ object Interpreter extends Application {
         val v1 = interpret(value, environment, position)
         val environment2 = environment + ((variable, v1))
         interpret(body, environment2, position)
+      case EEscape(body, mechanism) =>
+        interpret(body, environment, position) match {
+          case VText(text) => VText(SEscape(text, mechanism))
+          case v => report(v + " is not a string and thus cannot be escaped", position)
+        }
       case EText(text) => VText(text)
+      case EReliable(body) => interpret(body, environment, position)
       case ECons(head, tail) =>
         val v1 = interpret(head, environment, position)
         val v2 = interpret(tail, environment, position)
@@ -88,7 +95,7 @@ object Interpreter extends Application {
               case VText(text) => text
               case v => report(v + " is not a string but is the result of an iteration", position)
             }
-            VText(text.foldLeft("")(_ + _))
+            VText(text.foldLeft[Text](SString(""))(_ + _))
           case v => report(v + " is not a list and thus cannot be iterated over", position)
         }
       case ELookup(record, label) =>

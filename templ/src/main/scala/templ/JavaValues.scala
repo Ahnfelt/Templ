@@ -1,6 +1,7 @@
 package templ
 
 import templ.Value._
+import templ.Text._
 import scala.collection.immutable.Map
 import scala.collection.JavaConversions._
 import java.lang.reflect.Method
@@ -9,7 +10,7 @@ import java.lang.Iterable
 object JavaValues {
   def fromObject(value: AnyRef): Value = {
     value match {
-      case value: String => VText(value)
+      case value: String => VText(SString(value))
       case value: Iterable[AnyRef] => VList(value.map(fromObject _).toList)
       case value =>
         val methods = value.getClass.getMethods
