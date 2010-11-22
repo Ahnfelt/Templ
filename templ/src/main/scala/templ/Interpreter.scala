@@ -15,84 +15,104 @@ object Interpreter extends Application {
   def interpretFile(fileName: String, javaValue: AnyRef) : String = {
     val value = JavaValues.lazyValue(javaValue)
     val expression = Parser.parseFile(fileName)
-    val result = interpret(expression, Map(("data", value)), (fileName, NoPosition))
+    val result = interpret(expression)(Map(("data", value)), VRecord(Map()), (fileName, NoPosition))
     result match {
       case VText(text) => SEscape(text, Text.escapeHtml).toString
       case _ => report("Template does not return a string", (fileName, NoPosition))
     }
   }
 
-  def interpret(expression: Expression, environment: Map[Variable, Value], position: Position) : Value =
+  def interpret(expression: Expression)(implicit environment: Map[Variable, Value], modules: Value, position: Position) : Value =
     expression match {
-      case EAt(position, expression) => interpret(expression, environment, position)
+      case EAt(position, expression) =>
+        interpret(expression)(environment, modules, position)
+      case EImport(symbols, moduleNames, body) =>
+        var module = modules
+        def lookup(name: String) = {
+          module match {
+            case VRecord(fields) =>
+              if(fields.contains(name)) fields(name)
+              else report("Cannot find " + name + " in this import", position)
+            case _ => report("This module does not have any subodules", position)
+          }
+        }
+        for(moduleName <- moduleNames) module = lookup(moduleName)
+        val bindings = if(symbols.isEmpty) {
+          module match {
+            case VRecord(fields) => fields
+            case _ => report("Cannot find any submodules to import", position)
+          }
+        } else {
+          symbols.mapValues(lookup _)
+        }
+        interpret(body)(environment ++ bindings, modules, position)
       case EVariable(variable) =>
-        if (environment contains variable) {
+        if(environment.contains(variable)) {
           environment(variable)
         } else {
            report("Variable " + variable + " is not in scope here", position)
         }
       case EApply(function, argument) =>
-        val v1 = interpret(function, environment, position)
-        val v2 = interpret(argument, environment, position)
+        val v1 = interpret(function)
+        val v2 = interpret(argument)
         v1 match {
           case VLambda(context, variable, body) =>
-            val environment2 = (environment ++ context) + ((variable, v2))
-            interpret(body, environment2, position)
+            interpret(body)((environment ++ context) + ((variable, v2)), modules, position)
           case _ => report("The following is not a function and thus cannot be applied", positionOf(function, position))
         }
       case ELambda(variable, body) => VLambda(environment, variable, body)
       case ELet(variable, value, body) =>
-        val v1 = interpret(value, environment, position)
-        val environment2 = environment + ((variable, v1))
-        interpret(body, environment2, position)
+        val v1 = interpret(value)
+        interpret(body)(environment + ((variable, v1)), modules, position)
       case EEscape(body, mechanism) =>
-        interpret(body, environment, position) match {
+        interpret(body) match {
           case VText(text) => VText(SEscape(text, mechanism))
           case v => report("The following is not a string and thus cannot be escaped", positionOf(body, position))
         }
       case EText(text) => VText(text)
-      case EReliable(body) => interpret(body, environment, position)
+      case EReliable(body) => interpret(body)
       case ECons(head, tail) =>
-        val v1 = interpret(head, environment, position)
-        val v2 = interpret(tail, environment, position)
+        val v1 = interpret(head)
+        val v2 = interpret(tail)
         (v2) match {
           case VList(list) => VList (v1 :: list)
           case _ => report("The following is not a list and thus cannot be on the right hand side of a cons", positionOf(tail, position))
         }
       case ENil() => VList (List())
       case EFirst(list: Expression) =>
-        val v1 = interpret(list, environment, position)
+        val v1 = interpret(list)
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => list.first
           case v => report("The following is not a list and thus has no first element", positionOf(list, position))
         }
       case ELast(list: Expression) =>
-        val v1 = interpret(list, environment, position)
+        val v1 = interpret(list)
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => list.last
           case v => report("The following is not a list and thus has no last element", positionOf(list, position))
         }
       case EFront(list: Expression) =>
-        val v1 = interpret(list, environment, position)
+        val v1 = interpret(list)
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => VList(list.dropRight(1));
           case v => report("The following is not a list and thus has no front elements", positionOf(list, position))
         }
       case EBack(list: Expression) =>
-        val v1 = interpret(list, environment, position)
+        val v1 = interpret(list)
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => VList(list.drop(1));
           case v => report("The following is not a list and thus has no back elements", positionOf(list, position))
         }
       case EFor(variable, list, body) =>
-        val v1 = interpret(list, environment, position)
+        val v1 = interpret(list)
         v1 match {
           case VList(list) =>
-            val vs = for(val v <- list; val environment2 = environment + ((variable, v))) yield interpret(body, environment2, position)
+            val vs = for(val v <- list)
+              yield interpret(body)(environment + ((variable, v)), modules, position)
             val text = vs map {
               case VText(text) => text
               case v => report("The following is not a string but is the result of an iteration", positionOf(body, position))
@@ -101,7 +121,7 @@ object Interpreter extends Application {
           case v => report("The following is not a list and thus cannot be iterated over", positionOf(list, position))
         }
       case ELookup(record, label) =>
-        val v = interpret(record, environment, position)
+        val v = interpret(record)
         v match {
           case VRecord(fields) =>
             if (fields.contains(label)) {
@@ -117,23 +137,23 @@ object Interpreter extends Application {
           case _ => report("The following is not a record and cannot have field " + label, positionOf(record, position))
         }
       case ERecord(fields) =>
-        val fields2 = fields.mapValues({ case (e, _) => interpret(e, environment, positionOf(e, position)) })
+        val fields2 = fields.mapValues({ case (e, _) => interpret(e) })
         VRecord(fields2)
       case EAppend(left, right) =>
-        val text1 = interpret(left, environment, position) match {
+        val text1 = interpret(left) match {
           case VText(text) => text
           case v => report("The following is not a string on the left side of this concatenation", positionOf(left, position))
         }
-        val text2 = interpret(right, environment, position) match {
+        val text2 = interpret(right) match {
           case VText(text) => text
           case v => report ("The following is not a string on the right side of this concatenation", positionOf(right, position))
         }
         VText(text1 + text2)
       case EChoice(primary, secondary) =>
         try {
-          interpret(primary, environment, position)
+          interpret(primary)
         } catch {
-          case _: AlternativeException => interpret(secondary, environment, position)
+          case _: AlternativeException => interpret(secondary)
         }
     }
 

@@ -7,8 +7,11 @@ object Expression {
   type Position = (String, scala.util.parsing.input.Position)
   type Label = String
   type Required = Boolean
+  type Module = List[String]
+  type Symbol = String
 
-  case class EAt(position: Position, expression: Expression) extends Expression 
+  case class EAt(position: Position, expression: Expression) extends Expression
+  case class EImport(symbols: Map[Variable, Symbol], module: Module, body: Expression) extends Expression
   case class EVariable(variable: Variable) extends Expression
   case class EApply(function: Expression, argument: Expression) extends Expression
   case class ELambda(variable: Variable, body: Expression) extends Expression

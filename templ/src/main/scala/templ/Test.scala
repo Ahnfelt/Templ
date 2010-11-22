@@ -6,6 +6,7 @@ import templ.Value._
 import templ.Expression._
 import templ.Text._
 import java.util.Collections
+import java.io.File
 
 object Test extends Application {
   class Person {
@@ -15,7 +16,7 @@ object Test extends Application {
 
   {
     val e = EChoice(ELookup(ERecord(Map(("x", (EText(SString("first")), true)))), "x"), EText(SString("second")))
-    val v = Interpreter.interpret(e, Map(), ("", NoPosition))
+    val v = Interpreter.interpret(e)(Map(), VRecord(Map()), ("", NoPosition))
     println(v)
   }
 
@@ -26,7 +27,7 @@ object Test extends Application {
       println(program)
       println(result.get)
       try {
-        println(Interpreter.interpret(result.get, map, ("", NoPosition)))
+        println(Interpreter.interpret(result.get)(map, VRecord(Map()), ("", NoPosition)))
       } catch {
         case exception: InterpreterException =>
           println(exception.getMessage.replace("\n\n", "\n"))
@@ -56,5 +57,19 @@ object Test extends Application {
     println(JavaValues.strictValue("foo"))
     println(JavaValues.strictValue(Collections.singletonList("bar")))
     println(JavaValues.strictValue(new Person))
+  }
+
+  {
+    val directory = new File("/home/ahnfelt/Projects/templ/sources")
+    val modules = Module.loadModules(directory)
+    modules match {
+      case VRecord(fields) =>
+        fields("Test") match {
+          case VLambda(_, _, e) =>
+            Interpreter.interpret(e)(Map(), modules, ("Test.t", NoPosition)) match {
+              case VText(text) => println(text.toString)
+            }
+        }
+    }
   }
 }

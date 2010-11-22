@@ -20,7 +20,16 @@ object Parser extends RegexParsers {
   def variable = variableName ^^ (x => EVariable(x))
   def pattern: Parser[String] = variableName |
           "(" ~> whitespace ~> pattern <~ whitespace <~ ")"
+  def angleBrackets[T](inside: Parser[T]) =
+          "<" ~> whitespace ~> inside <~ whitespace <~ ">" | inside
   def construct(after: Parser[Expression]) =
+    keyword("import") ~> whitespace ~> angleBrackets(
+            rep1sep(upperName, ".") ~ opt(".*")) ~ after ^^ {
+      case module ~ None ~ e =>
+        EImport(Map(module.last -> module.last), module.dropRight(1), e)
+      case module ~ Some(_) ~ e =>
+        EImport(Map(), module, e)
+    } |
     keyword("function") ~> whitespace ~>
             upperName ~ whitespace ~ pattern ~ whitespace ~ expression ~ after ^^ {
       case name ~ _ ~ x ~ _ ~ e1 ~ e2 =>
