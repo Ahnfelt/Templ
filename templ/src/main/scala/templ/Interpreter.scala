@@ -7,12 +7,13 @@ import templ.Value._
 import templ.Text._
 
 object Interpreter extends Application {
+  class InterpreterException(message: String) extends RuntimeException(message)
   abstract class AlternativeException(val position: Position) extends RuntimeException
   class LookupException(position: Position) extends AlternativeException(position)
   class ListException(position: Position) extends AlternativeException(position)
 
   def interpretFile(fileName: String, javaValue: AnyRef) : String = {
-    val value = JavaValues.fromObject(javaValue)
+    val value = JavaValues.lazyValue(javaValue)
     val expression = Parser.parseFile(fileName)
     val result = interpret(expression, Map(("data", value)), (fileName, NoPosition))
     result match {
@@ -37,7 +38,7 @@ object Interpreter extends Application {
           case VLambda(context, variable, body) =>
             val environment2 = (environment ++ context) + ((variable, v2))
             interpret(body, environment2, position)
-          case _ => report(v1 + " is not a function and thus cannot be applied", position)
+          case _ => report("The following is not a function and thus cannot be applied", positionOf(function, position))
         }
       case ELambda(variable, body) => VLambda(environment, variable, body)
       case ELet(variable, value, body) =>
@@ -47,7 +48,7 @@ object Interpreter extends Application {
       case EEscape(body, mechanism) =>
         interpret(body, environment, position) match {
           case VText(text) => VText(SEscape(text, mechanism))
-          case v => report(v + " is not a string and thus cannot be escaped", position)
+          case v => report("The following is not a string and thus cannot be escaped", positionOf(body, position))
         }
       case EText(text) => VText(text)
       case EReliable(body) => interpret(body, environment, position)
@@ -56,7 +57,7 @@ object Interpreter extends Application {
         val v2 = interpret(tail, environment, position)
         (v2) match {
           case VList(list) => VList (v1 :: list)
-          case _ => report(v2 + " is not a list and thus cannot be on the right hand side of a cons", position)
+          case _ => report("The following is not a list and thus cannot be on the right hand side of a cons", positionOf(tail, position))
         }
       case ENil() => VList (List())
       case EFirst(list: Expression) =>
@@ -64,28 +65,28 @@ object Interpreter extends Application {
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => list.first
-          case v => report(v + " is not a list and thus has no first element", position)
+          case v => report("The following is not a list and thus has no first element", positionOf(list, position))
         }
       case ELast(list: Expression) =>
         val v1 = interpret(list, environment, position)
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => list.last
-          case v => report(v + " is not a list and thus has no last element", position)
+          case v => report("The following is not a list and thus has no last element", positionOf(list, position))
         }
       case EFront(list: Expression) =>
         val v1 = interpret(list, environment, position)
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => VList(list.dropRight(1));
-          case v => report(v + " is not a list and thus has no front elements", position)
+          case v => report("The following is not a list and thus has no front elements", positionOf(list, position))
         }
       case EBack(list: Expression) =>
         val v1 = interpret(list, environment, position)
         v1 match {
           case VList(List()) => throw new ListException(position);
           case VList(list) => VList(list.drop(1));
-          case v => report(v + " is not a list and thus has no back elements", position)
+          case v => report("The following is not a list and thus has no back elements", positionOf(list, position))
         }
       case EFor(variable, list, body) =>
         val v1 = interpret(list, environment, position)
@@ -94,10 +95,10 @@ object Interpreter extends Application {
             val vs = for(val v <- list; val environment2 = environment + ((variable, v))) yield interpret(body, environment2, position)
             val text = vs map {
               case VText(text) => text
-              case v => report(v + " is not a string but is the result of an iteration", position)
+              case v => report("The following is not a string but is the result of an iteration", positionOf(body, position))
             }
             VText(text.foldLeft[Text](SString(""))(_ + _))
-          case v => report(v + " is not a list and thus cannot be iterated over", position)
+          case v => report("The following is not a list and thus cannot be iterated over", positionOf(list, position))
         }
       case ELookup(record, label) =>
         val v = interpret(record, environment, position)
@@ -108,19 +109,24 @@ object Interpreter extends Application {
             } else {
               throw new LookupException(position)
             }
-          case _ => report(v + " is not a record and cannot have field " + label, position)
+          case VAbstract(fields) =>
+            fields.field(label) match {
+              case Some(v) => v
+              case None => throw new LookupException(position)
+            }
+          case _ => report("The following is not a record and cannot have field " + label, positionOf(record, position))
         }
       case ERecord(fields) =>
-        val fields2 = fields.mapValues({ case (e, _) => interpret(e, environment, position) })
+        val fields2 = fields.mapValues({ case (e, _) => interpret(e, environment, positionOf(e, position)) })
         VRecord(fields2)
       case EAppend(left, right) =>
         val text1 = interpret(left, environment, position) match {
           case VText(text) => text
-          case v => report(v + " is not a string on the left side of this concatenation", position)
+          case v => report("The following is not a string on the left side of this concatenation", positionOf(left, position))
         }
         val text2 = interpret(right, environment, position) match {
           case VText(text) => text
-          case v => report (v + " is not a string on the right side of this concatenation", position)
+          case v => report ("The following is not a string on the right side of this concatenation", positionOf(right, position))
         }
         VText(text1 + text2)
       case EChoice(primary, secondary) =>
@@ -131,8 +137,13 @@ object Interpreter extends Application {
         }
     }
 
-  def report [T] (message: String, position: Position) : T = {
-    throw new RuntimeException(errorWithPosition(message, position))
+  def positionOf(e: Expression, position: Position): Position = e match {
+    case EAt(position, e) => positionOf(e, position)
+    case e => position
+  }
+
+  def report[T](message: String, position: Position) : T = {
+    throw new InterpreterException(errorWithPosition(message, position))
   }
 
 }
