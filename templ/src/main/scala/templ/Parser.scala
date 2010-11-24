@@ -24,11 +24,16 @@ object Parser extends RegexParsers {
           "<" ~> whitespace ~> inside <~ whitespace <~ ">" | inside
   def construct(after: Parser[Expression]) =
     keyword("import") ~> whitespace ~> angleBrackets(
-            rep1sep(upperName, ".") ~ opt(".*")) ~ after ^^ {
+            rep1sep(upperName, ".") ~ opt((".*" ^^^ List()) |
+            "." ~> whitespace ~> "(" ~> whitespace ~>
+            rep1sep((upperName ~ whitespace ~ "=" ~ whitespace ~ upperName ^^ {
+              case variable ~ _ ~ _ ~ _ ~ symbol => variable -> symbol
+            }) | (upperName ^^ {symbol => symbol -> symbol}), whitespace ~ "," ~ whitespace)
+            <~ whitespace <~ ")")) ~ after ^^ {
       case module ~ None ~ e =>
         EImport(Map(module.last -> module.last), module.dropRight(1), e)
-      case module ~ Some(_) ~ e =>
-        EImport(Map(), module, e)
+      case module ~ Some(pairs) ~ e =>
+        EImport(Map(pairs: _*), module, e)
     } |
     keyword("function") ~> whitespace ~>
             upperName ~ whitespace ~ pattern ~ whitespace ~ expression ~ after ^^ {

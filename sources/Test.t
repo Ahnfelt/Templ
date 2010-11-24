@@ -1,6 +1,6 @@
-@import Base.*
+@import Base.(Foo = Xhtml)
 
-@Xhtml (
+@Foo (
     body: {
         <p>Hello, world!</p>
     }
