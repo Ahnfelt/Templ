@@ -31,6 +31,31 @@ object Expression {
   case class EAppend(left: Expression, right: Expression) extends Expression
   case class EChoice(primary: Expression, secondary: Expression) extends Expression
 
+  def imports(expression: Expression): Set[Either[Module, Module]] = expression match {
+    case EAt(_, e) => imports(e)
+    case EImport(symbols, module, e) => (if(symbols.isEmpty) Set(Left(module)) else
+      Set((for(symbol <- symbols.values) yield Right(module :+ symbol)).toSeq: _* )) ++
+      imports(e)
+    case EVariable(_) => Set()
+    case EApply(e1, e2) => imports(e1) ++ imports(e2)
+    case ELambda(_, e) => imports(e)
+    case ELet(_, e1, e2) => imports(e1) ++ imports(e2)
+    case EReliable(e) => imports(e)
+    case EEscape(e, _) => imports(e)
+    case EText(_) => Set()
+    case ECons(e1, e2) => imports(e1) ++ imports(e2)
+    case ENil() => Set()
+    case EFirst(e) => imports(e)
+    case ELast(e) => imports(e)
+    case EFront(e) => imports(e)
+    case EBack(e) => imports(e)
+    case EFor(_, e1, e2) => imports(e1) ++ imports(e2)
+    case ELookup(e, _) => imports(e)
+    case ERecord(fields) => (fields.values.map { case (e, _) => imports(e) }).foldLeft[Set[Either[Module, Module]]](Set())(_ ++ _)
+    case EAppend(e1, e2) => imports(e1) ++ imports(e2)
+    case EChoice(e1, e2) => imports(e1) ++ imports(e2)
+  }
+
   def errorWithPosition(message: String, position: Position) = {
     position match {
       case (filename, lineColumn) =>
