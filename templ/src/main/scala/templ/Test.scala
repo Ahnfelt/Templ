@@ -1,5 +1,6 @@
 package templ
 
+import _root_.templ.Translator.MultiTranslator
 import templ.Interpreter.InterpreterException
 import scala.util.parsing.input.NoPosition
 import templ.Value._
@@ -71,5 +72,13 @@ object Test extends Application {
             }
         }
     }
+  }
+
+  {
+    val translator = Translator.parse("""
+      english {I have $count items in my $container}
+      danish {I min $container har jeg $count ting}
+    """).forLanguage("danish")
+    println(translator.translate("I have %s items in my %s", "5", "taske"))
   }
 }
