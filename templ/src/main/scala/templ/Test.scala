@@ -1,6 +1,5 @@
 package templ
 
-import _root_.templ.Translator.MultiTranslator
 import templ.Interpreter.InterpreterException
 import scala.util.parsing.input.NoPosition
 import templ.Value._

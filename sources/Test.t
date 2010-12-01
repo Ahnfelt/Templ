@@ -1,7 +1,7 @@
-@import Base.(Foo = Xhtml)
+@import Base.(Foo = Xhtml):
 
 @Foo (
-    body: {
+    body = {
         <p>Hello, world!</p>
     }
 )
