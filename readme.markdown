@@ -177,8 +177,6 @@ Template files are in UTF-8.
 Escaping and XSS prevention
 ---------------------------
 
-*Tentative design, but here's the idea*
-
 User input may contain characters that have special meaning in the document that's being
 generated. For example, the symbols `<>/&"'` are special in HTML. If we insert text 
 containing these, the best case scenario is that the page displays wrong. The worst case
