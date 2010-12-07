@@ -20,14 +20,16 @@ object Parser extends RegexParsers {
   def variable = variableName ^^ (x => EVariable(x))
   def pattern: Parser[String] = variableName |
           "(" ~> whitespace ~> pattern <~ whitespace <~ ")"
+  def angleBrackets[T](inside: Parser[T]): Parser[T] =
+          "<" ~> whitespace ~> inside <~ whitespace <~ ">" | inside
   def construct(after: Parser[Expression]) =
-    keyword("import") ~> whitespace ~>
+    keyword("import") ~> whitespace ~> angleBrackets(
             rep1sep(upperName, ".") ~ opt((".*" ^^^ List()) |
             "." ~> whitespace ~> "(" ~> whitespace ~>
             rep1sep((upperName ~ whitespace ~ "=" ~ whitespace ~ upperName ^^ {
               case variable ~ _ ~ _ ~ _ ~ symbol => variable -> symbol
             }) | (upperName ^^ {symbol => symbol -> symbol}), whitespace ~ "," ~ whitespace)
-            <~ whitespace <~ ")") ~ after ^^ {
+            <~ whitespace <~ ")")) ~ after ^^ {
       case module ~ None ~ e =>
         EImport(Map(module.last -> module.last), module.dropRight(1), e)
       case module ~ Some(pairs) ~ e =>
@@ -100,7 +102,7 @@ object Parser extends RegexParsers {
     case es =>
       es.reduceLeft(EChoice(_, _))
   }
-  def atomicTextExpression = withPosition(textInsert | text | textEscape | common(whitespace ~> ":" ~> textExpression))
+  def atomicTextExpression = withPosition(textInsert | text | textEscape | common(textExpression))
   def textExpression: Parser[Expression] = textChoice
 
   def withPosition(parser: Parser[Expression]): Parser[Expression] = {
