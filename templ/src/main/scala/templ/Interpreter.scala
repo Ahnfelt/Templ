@@ -70,6 +70,7 @@ object Interpreter extends Application {
           case v => report("The following is not a string and thus cannot be escaped", positionOf(body, position))
         }
       case EText(text) => VText(text)
+      case ETry(body) => interpret(body)
       case EReliable(body) => interpret(body)
       case ECons(head, tail) =>
         val v1 = interpret(head)

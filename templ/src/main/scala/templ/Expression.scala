@@ -16,6 +16,7 @@ object Expression {
   case class EApply(function: Expression, argument: Expression) extends Expression
   case class ELambda(variable: Variable, body: Expression) extends Expression
   case class ELet(variable: Variable, value: Expression, body: Expression) extends Expression
+  case class ETry(body: Expression) extends Expression
   case class EReliable(body: Expression) extends Expression
   case class EEscape(body: Expression, mechanism: String => String) extends Expression
   case class EText(text: Text) extends Expression
@@ -40,6 +41,7 @@ object Expression {
     case EApply(e1, e2) => imports(e1) ++ imports(e2)
     case ELambda(_, e) => imports(e)
     case ELet(_, e1, e2) => imports(e1) ++ imports(e2)
+    case ETry(e) => imports(e)
     case EReliable(e) => imports(e)
     case EEscape(e, _) => imports(e)
     case EText(_) => Set()

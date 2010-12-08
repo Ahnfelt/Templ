@@ -1,8 +1,5 @@
-Templ readme
-============
-
 Introduction
-------------
+============
 
 Templ is a language for specifying document templates.
 The most common usage is to generate HTML documents on the server side.
@@ -37,7 +34,7 @@ the field access or introduce a temporary variable.
 
 
 Ruling out failure
-------------------
+==================
 
 Both the Templ and the JSP examples beg the question; what happens if the 
 `.name` field is missing? Some template engines will report an error to
@@ -68,7 +65,7 @@ and strings.
 
 
 Variables and functions
------------------------
+=======================
 
 *To be written, but here's a bit:*
 
@@ -101,7 +98,7 @@ And apply them like this:
 
 
 Iterating over lists
---------------------
+====================
 
 *To be written, but here is an example:*
 
@@ -113,13 +110,13 @@ Iterating over lists
 
 
 Modules and imports
--------------------
+===================
 
 *To be written*
 
 
 Branching on type
------------------
+=================
 
 *To be implemented, but here's the idea*
 
@@ -139,7 +136,7 @@ you can branch on the type by using `@case`:
 
 
 Syntactic details
------------------
+=================
 
 *To be written, but here's a bit:*
 
@@ -175,7 +172,7 @@ Template files are in UTF-8.
 
 
 Escaping and XSS prevention
----------------------------
+===========================
 
 User input may contain characters that have special meaning in the document that's being
 generated. For example, the symbols `<>/&"'` are special in HTML. If we insert text 
@@ -217,7 +214,7 @@ would emit `Why 0 < 1`.
 
 
 Translation and localization
-----------------------------
+============================
 
 *Tentative design, but here's the idea*
 
@@ -269,7 +266,7 @@ Strings will be escaped after translation.
 
 
 Calling templates from Java
----------------------------
+===========================
 
 *To be written*
 

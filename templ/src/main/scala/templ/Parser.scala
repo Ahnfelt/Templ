@@ -60,7 +60,7 @@ object Parser extends RegexParsers {
       case x ~ _ ~ e1 ~ _ ~ e2 =>
         EFor(x, e1, e2)
     } |
-    keyword("try") ~> whitespace ~> expression ^^ unreliable |
+    keyword("try") ~> whitespace ~> expression ^^ { e => ETry(unreliable(e)) } |
     keyword("first") ~> whitespace ~> expression ^^ { EFirst(_) } |
     keyword("last") ~> whitespace ~> expression ^^ { ELast(_) } |
     keyword("front") ~> whitespace ~> expression ^^ { EFront(_) } |
